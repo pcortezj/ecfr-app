@@ -1,0 +1,11 @@
+{
+  "name": "usds_proj",
+  "version": "1.0.0",
+  "description": "app to extract and analyze ecrf data",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Pa'tron Johnson",
+  "license": "ISC"
+}
