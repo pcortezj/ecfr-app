@@ -80,7 +80,7 @@ export default function Agencies() {
       </div>
 
       {sortedMetrics.length === 0 ? (
-        <p className="text-gray-700">Loading metrics...</p>
+        <p className="text-gray-300">Loading metrics...</p>
       ) : (
         <>
           <div className="overflow-x-auto mb-6">
