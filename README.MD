@@ -63,7 +63,7 @@ The fetch script downloads all eCFR titles and stores them in a local SQLite dat
 ```bash
 cd backend
 node db_init
-node fetch_ecfr.js
+node fetch.js
 ```
 
 **Notes:**
@@ -73,7 +73,7 @@ node fetch_ecfr.js
 - Optional: run Node with `--expose-gc` if you encounter memory issues:
 
 ```bash
-node --expose-gc fetch_ecfr.js
+node --expose-gc fetch.js
 ```
 
 ---
