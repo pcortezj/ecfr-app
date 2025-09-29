@@ -1,8 +1,29 @@
-# eCFR Explorer
+## eCFR Explorer Overview
 
-This project contains a **frontend** (Next.js) for exploring eCFR titles and a **backend** script to fetch and store eCFR data in a SQLite database.
+The **Code of Federal Regulations (CFR) Explorer** is a web application that allows users to explore the U.S. federal regulations in a structured, interactive way. It aggregates data from the ECFR API and provides insights into the content of federal titles and the agencies responsible for them.  
 
----
+### Key Features
+
+- **Agency Metrics Dashboard:** View total words, sentence counts, average sentence length, and lexical density for each agency.  
+- **Title Explorer:** Browse all CFR titles with details including latest amendments, issue dates, and reserved status.  
+- **Full-Text Download:** Download the complete text of any title in plain text format.  
+- **Interactive Visualizations:** Visualize word counts per agency using dynamic charts.  
+- **Data-Driven Insights:** Metrics are computed automatically from the ECFR data, giving users a clear picture of regulatory content per agency.  
+- **Clean, Modern UI:** Built with Next.js and Tailwind CSS for responsive, user-friendly navigation.  
+
+### Tech Stack
+
+- **Next.js** – React framework for server-side rendering and API routes  
+- **SQLite (better-sqlite3)** – Stores agencies, titles, and snapshots  
+- **ECFR API** – Source for regulatory text and metadata  
+- **Recharts** – Charts for agency metrics visualization  
+
+### Use Cases
+
+- Researchers and legal professionals can quickly identify which agencies regulate which areas.  
+- Developers can programmatically access CFR metrics via built-in API routes.  
+- Anyone can download full CFR title texts for offline analysis or reference.  
+
 
 ## Requirements
 

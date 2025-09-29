@@ -1,53 +1,52 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getTitles } from '../lib/api';
 
-export default function Home() {
-  const [titles, setTitles] = useState([]);
+export default function Agencies() {
+  const [metrics, setMetrics] = useState([]);
 
   useEffect(() => {
-    getTitles().then(setTitles);
+    fetch('/api/agencies/metrics')
+      .then(res => res.json())
+      .then(setMetrics)
+      .catch(err => console.error('Failed to load metrics:', err));
   }, []);
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-center text-white">
-        Code of Federal Regulations Explorer
-      </h1>
+    <div className="p-6 max-w-7xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6">Agency Metrics</h1>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 border border-gray-300 rounded-lg shadow-sm">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Number</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Name</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Latest Amended</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Latest Issue</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Up-to-date</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Reserved</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {titles.map((t, idx) => (
-              <tr
-                key={t.id}
-                className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-gray-100'}
-              >
-                <td className="px-4 py-2 text-black">{t.number}</td>
-                <td className="px-4 py-2">
-                  <Link href={`/titles/${t.number}`} className="text-blue-600 hover:underline">
-                    {t.name}
-                  </Link>
-                </td>
-                <td className="px-4 py-2 text-black">{t.latest_amended_on}</td>
-                <td className="px-4 py-2 text-black">{t.latest_issue_date}</td>
-                <td className="px-4 py-2 text-black">{t.up_to_date_as_of}</td>
-                <td className="px-4 py-2 text-black">{t.reserved ? 'Yes' : 'No'}</td>
+      {metrics.length === 0 ? (
+        <p className="text-gray-700">Loading metrics...</p>
+      ) : (
+        <div className="overflow-x-auto mb-6">
+          <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-md">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="px-4 py-2 text-left text-gray-800">Agency</th>
+                <th className="px-4 py-2 text-right text-gray-800">Total Words</th>
+                <th className="px-4 py-2 text-right text-gray-800">Total Sentences</th>
+                <th className="px-4 py-2 text-right text-gray-800">Avg Sentence Length</th>
+                <th className="px-4 py-2 text-right text-gray-800">Avg Lexical Density</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {metrics.map(a => (
+                <tr key={a.agency_id} className="hover:bg-gray-50 border-b border-gray-200">
+                  <td className="px-4 py-2 font-semibold text-gray-900">
+                    <Link href={`/agencies/${a.agency_id}`} className="text-blue-600 hover:underline">
+                      {a.agency_name}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-2 text-right text-gray-900">{a.total_words?.toLocaleString() || 0}</td>
+                  <td className="px-4 py-2 text-right text-gray-900">{a.total_sentences?.toLocaleString() || 0}</td>
+                  <td className="px-4 py-2 text-right text-gray-900">{(a.avg_sentence_length || 0).toFixed(2)}</td>
+                  <td className="px-4 py-2 text-right text-gray-900">{(a.avg_lexical_density || 0).toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

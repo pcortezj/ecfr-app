@@ -73,6 +73,12 @@ export default function TitleDetail() {
             </div>
 
             <h2 className="text-2xl font-semibold mt-6 mb-3 text-black">Raw Text (Preview)</h2>
+            <a
+                href={`/api/snapshots/${[number]}/download`}
+                className="inline-block bg-gray-800 text-white px-3 py-1 rounded-lg shadow hover:bg-gray-400 transition mb-2"
+            >
+                Download Full Text
+            </a>
 
             <textarea
                 className="w-full h-64 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none text-gray-800"
