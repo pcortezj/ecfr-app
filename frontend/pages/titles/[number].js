@@ -28,12 +28,12 @@ export default function TitleDetail() {
         });
     }, [number]);
 
-    if (!metrics || !titleInfo) return <p className="text-center mt-20 text-gray-500">Loading...</p>;
+    if (!metrics || !titleInfo) return <p className="text-center mt-20 text-white">Loading...</p>;
 
     return (
         <div className="max-w-5xl mx-auto p-6 bg-white shadow-md rounded-md mt-6">
             {/* Back link */}
-            <p className="mb-4 text-blue-600 hover:underline">
+            <p className="mb-4 text-gray-700 hover:underline">
                 <Link href="/">← Back to Home</Link>
             </p>
 
@@ -67,7 +67,7 @@ export default function TitleDetail() {
                         <Tooltip contentStyle={{ backgroundColor: 'white', borderColor: '#ccc' }}
                             labelStyle={{ color: 'black' }}
                             itemStyle={{ color: 'black' }} />
-                        <Line type="monotone" dataKey="word_count" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="word_count" stroke="#656a72ff" strokeWidth={2} dot={false} />
                     </LineChart>
                 </ResponsiveContainer>
             </div>
