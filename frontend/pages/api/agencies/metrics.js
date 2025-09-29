@@ -6,7 +6,7 @@ export default function handler(req, res) {
     const dbPath = path.resolve('../backend/ecfr.db'); // adjust path
     const db = new Database(dbPath, { readonly: true });
 
-    // Only agencies with metrics
+    // Aggregate metrics per agency but only include agencies with snapshots
     const stmt = db.prepare(`
       SELECT 
         a.id AS agency_id,
@@ -19,6 +19,7 @@ export default function handler(req, res) {
       JOIN titles t ON t.agency_id = a.id
       JOIN snapshots s ON s.title_id = t.id
       GROUP BY a.id, a.name
+      HAVING SUM(s.word_count) > 0
       ORDER BY total_words DESC
     `);
 
