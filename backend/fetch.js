@@ -33,7 +33,10 @@ const insertAgency = db.prepare(`
 `);
 const getAgencyBySlug = db.prepare('SELECT id FROM agencies WHERE slug = ?');
 
-const updateTitleAgency = db.prepare('UPDATE titles SET agency_id = ? WHERE number = ?');
+const insertTitleAgency = db.prepare(`
+  INSERT OR IGNORE INTO title_agency (title_id, agency_id) VALUES (?, ?)
+`);
+
 const getTitleByNumber = db.prepare('SELECT id, number, latest_issue_date FROM titles WHERE number = ?');
 
 const insertTitle = db.prepare(`
@@ -76,18 +79,18 @@ async function insertAgencyRecursive(a, parentId = null) {
   const agencyRow = getAgencyBySlug.get(a.slug);
   const agencyId = agencyRow.id;
 
-  // Link titles
+  // Link titles (multiple agencies can reference the same title now)
   if (Array.isArray(a.cfr_references)) {
     for (const ref of a.cfr_references) {
       const titleRow = getTitleByNumber.get(parseInt(ref.title, 10));
       if (titleRow) {
-        updateTitleAgency.run(agencyId, titleRow.number);
+        insertTitleAgency.run(titleRow.id, agencyId);
       }
     }
   }
 
-  // Recurse children
-  if (Array.isArray(a.children)) {
+  // Recurse children (safe even if empty array)
+  if (Array.isArray(a.children) && a.children.length > 0) {
     for (const child of a.children) {
       await insertAgencyRecursive(child, agencyId);
     }
@@ -97,8 +100,11 @@ async function insertAgencyRecursive(a, parentId = null) {
 async function fetchAgencies() {
   const { data } = await axios.get('https://www.ecfr.gov/api/admin/v1/agencies.json');
   console.log(`Fetched ${data.agencies.length} agencies`);
+  
 
   for (const a of data.agencies) {
+    console.log(a.children);
+    
     await insertAgencyRecursive(a, null);
   }
 

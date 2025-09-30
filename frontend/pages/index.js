@@ -1,57 +1,43 @@
-import { useEffect, useState, useMemo } from 'react';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  ResponsiveContainer,
-} from 'recharts';
-import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
+
+// Utility to format large numbers
+const formatNumber = (num) => {
+  if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + 'M';
+  if (num >= 1_000) return (num / 1_000).toFixed(1) + 'k';
+  return num.toString();
+};
 
 export default function Agencies() {
-  const [metrics, setMetrics] = useState([]);
-  const [sortConfig, setSortConfig] = useState({ key: 'total_words', direction: 'desc' });
-  const [filterText, setFilterText] = useState('');
+  const [agencies, setAgencies] = useState([]);
+  const [sortKey, setSortKey] = useState('agency_name');
+  const [sortOrder, setSortOrder] = useState('asc');
+  const [filter, setFilter] = useState('');
 
   useEffect(() => {
     fetch('/api/agencies/metrics')
       .then(res => res.json())
-      .then(setMetrics)
+      .then(setAgencies)
       .catch(err => console.error('Failed to load metrics:', err));
   }, []);
 
-  const sortedMetrics = useMemo(() => {
-    let sortableData = [...metrics];
-    if (filterText) {
-      sortableData = sortableData.filter(a =>
-        a.agency_name.toLowerCase().includes(filterText.toLowerCase())
-      );
+  const sortedFiltered = agencies
+    .filter(a => a.agency_name.toLowerCase().includes(filter.toLowerCase()))
+    .sort((a, b) => {
+      const valA = a[sortKey];
+      const valB = b[sortKey];
+      if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+      if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+  const toggleSort = (key) => {
+    if (sortKey === key) setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    else {
+      setSortKey(key);
+      setSortOrder('asc');
     }
-
-    if (sortConfig.key) {
-      sortableData.sort((a, b) => {
-        const aVal = a[sortConfig.key] ?? 0;
-        const bVal = b[sortConfig.key] ?? 0;
-        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
-    return sortableData;
-  }, [metrics, sortConfig, filterText]);
-
-  const requestSort = key => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
-    setSortConfig({ key, direction });
-  };
-
-  const getSortIcon = key => {
-    if (sortConfig.key !== key) return <FaSort className="inline ml-1" />;
-    return sortConfig.direction === 'asc' ? <FaSortUp className="inline ml-1" /> : <FaSortDown className="inline ml-1" />;
   };
 
   return (
@@ -59,89 +45,79 @@ export default function Agencies() {
       <h1 className="text-3xl font-bold mb-6 text-center text-white">
         Code of Federal Regulations Explorer
       </h1>
-      <h1 className="text-2xl font-bold mb-6 text-center">Agency Metrics</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center">Agency Metrics</h1>
       <div className="mb-6 text-center">
-        <Link
+
+      <Link
           href="/titles"
-          className="inline-block bg-gray-800 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-500 transition"
+          className="mb-6 inline-block bg-gray-800 text-white text-center px-4 py-2 rounded-lg shadow hover:bg-gray-500 transition"
         >
           View All Titles
         </Link>
-      </div>
-
-      <div className="mb-4 flex justify-center">
+      <div className="mb-4">
         <input
           type="text"
-          placeholder="Filter by agency name..."
-          value={filterText}
-          onChange={e => setFilterText(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded shadow w-full max-w-sm text-center"
+          placeholder="Filter agencies..."
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+          className="px-3 py-2 border rounded w-full max-w-sm"
         />
       </div>
+      </div>
 
-      {sortedMetrics.length === 0 ? (
+      {agencies.length === 0 ? (
         <p className="text-gray-300">Loading metrics...</p>
       ) : (
         <>
+          {/* Table */}
           <div className="overflow-x-auto mb-6">
-            <div className="mb-4 text-gray-200 text-base">
-              Click on an agency name below to view all titles for that agency.
-            </div>
             <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-md">
-              <thead className="bg-gray-800 text-white">
+              <thead className="bg-gray-200 text-gray-800">
                 <tr>
                   <th
                     className="px-4 py-2 text-left cursor-pointer"
-                    onClick={() => requestSort('agency_name')}
+                    onClick={() => toggleSort('agency_name')}
                   >
-                    Agency {getSortIcon('agency_name')}
+                    Agency {sortKey === 'agency_name' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
                   </th>
                   <th
                     className="px-4 py-2 text-right cursor-pointer"
-                    onClick={() => requestSort('total_words')}
+                    onClick={() => toggleSort('total_words')}
                   >
-                    Total Words {getSortIcon('total_words')}
+                    Total Words {sortKey === 'total_words' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
                   </th>
-                  <th
-                    className="px-4 py-2 text-right cursor-pointer"
-                    onClick={() => requestSort('total_sentences')}
-                  >
-                    Total Sentences {getSortIcon('total_sentences')}
+                  <th className="px-4 py-2 text-right" onClick={() => toggleSort('total_sentences')}>
+                    Total Sentences {sortKey === 'total_sentences' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
                   </th>
-                  <th
-                    className="px-4 py-2 text-right cursor-pointer"
-                    onClick={() => requestSort('avg_sentence_length')}
-                  >
-                    Avg Sentence Length {getSortIcon('avg_sentence_length')}
+                  <th className="px-4 py-2 text-right" onClick={() => toggleSort('avg_sentence_length')}>
+                    Avg Sentence Length {sortKey === 'avg_sentence_length' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
                   </th>
-                  <th
-                    className="px-4 py-2 text-right cursor-pointer"
-                    onClick={() => requestSort('avg_lexical_density')}
-                  >
-                    Avg Lexical Density {getSortIcon('avg_lexical_density')}
+                  <th className="px-4 py-2 text-right" onClick={() => toggleSort('avg_lexical_density')}>
+                    Avg Lexical Density {sortKey === 'avg_lexical_density' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
                   </th>
-                  <th className="px-4 py-2 text-right">Checksum</th>
+                  <th className="px-4 py-2 text-right">Titles</th>
                 </tr>
               </thead>
               <tbody>
-                {sortedMetrics.map(a => (
+                {sortedFiltered.map(a => (
                   <tr key={a.agency_id} className="hover:bg-gray-50 border-b border-gray-200">
-                    <td className="px-4 py-2 font-semibold text-gray-900"><Link href={`/agencies/${a.agency_id}`} className="text-gray-600 hover:underline">
-                      {a.agency_name}
-                    </Link></td>
-                    <td className="px-4 py-2 text-right text-gray-900">{a.total_words?.toLocaleString() || 0}</td>
-                    <td className="px-4 py-2 text-right text-gray-900">{a.total_sentences?.toLocaleString() || 0}</td>
+                    <td className="px-4 py-2 font-semibold text-gray-900">
+                      <Link href={`/agencies/${a.agency_id}`} className="text-blue-600 hover:underline">
+                        {a.agency_name}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-2 text-right text-gray-900">{formatNumber(a.total_words)}</td>
+                    <td className="px-4 py-2 text-right text-gray-900">{formatNumber(a.total_sentences)}</td>
                     <td className="px-4 py-2 text-right text-gray-900">{(a.avg_sentence_length || 0).toFixed(2)}</td>
                     <td className="px-4 py-2 text-right text-gray-900">{(a.avg_lexical_density || 0).toFixed(2)}</td>
-                    <td
-                      className="px-4 py-2 text-right font-mono text-sm text-gray-700 cursor-pointer"
-                      title="Click to copy"
-                      onClick={() => {
-                        navigator.clipboard.writeText(a.checksum || '');
-                        alert('Checksum copied!');
-                      }}
-                    >
-                      {a.checksum ? `${a.checksum.slice(0, 10)}…` : '-'}
+                    <td className="px-4 py-2 text-right text-gray-900">
+                      {a.titles.map(t => (
+                        <div key={t.id}>
+                          <Link href={`/titles/${t.number}`} className="text-blue-600 hover:underline">
+                            {t.name}
+                          </Link>
+                        </div>
+                      ))}
                     </td>
                   </tr>
                 ))}
@@ -149,33 +125,25 @@ export default function Agencies() {
             </table>
           </div>
 
+          {/* Word Count Chart */}
           <h2 className="text-2xl font-semibold mb-4">Word Count per Agency</h2>
           <div className="w-full h-96">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={sortedMetrics}>
+              <LineChart data={sortedFiltered}>
                 <CartesianGrid stroke="#e2e8f0" />
                 <XAxis dataKey="agency_name" tick={{ fontSize: 12 }} />
                 <YAxis
-                  tickFormatter={(value) => {
-                    if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-                    if (value >= 1_000) return `${(value / 1_000).toFixed(1)}k`;
-                    return value;
-                  }}
+                  tickFormatter={formatNumber}
                 />
                 <Tooltip
                   contentStyle={{ backgroundColor: 'white', borderRadius: '0.375rem', color: '#111827' }}
                   labelStyle={{ fontWeight: 'bold' }}
-                  formatter={(value) => {
-                    if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-                    if (value >= 1_000) return `${(value / 1_000).toFixed(1)}k`;
-                    return value;
-                  }}
+                  formatter={value => formatNumber(value)}
                 />
                 <Line type="monotone" dataKey="total_words" stroke="#4f46e5" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </div>
-
         </>
       )}
     </div>

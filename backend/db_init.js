@@ -37,7 +37,14 @@ CREATE TABLE IF NOT EXISTS snapshots (
   lexical_density REAL,
   FOREIGN KEY(title_id) REFERENCES titles(id)
 );
+CREATE TABLE IF NOT EXISTS title_agency (
+  title_id INTEGER NOT NULL,
+  agency_id INTEGER NOT NULL,
+  PRIMARY KEY (title_id, agency_id),
+  FOREIGN KEY(title_id) REFERENCES titles(id),
+  FOREIGN KEY(agency_id) REFERENCES agencies(id)
+);
 `);
 
-console.log("DB initialized with parent_id for agencies.");
+console.log("DB initialized with necessary tables.");
 db.close();
