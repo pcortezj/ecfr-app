@@ -22,23 +22,48 @@ export default function Agencies() {
       .catch(err => console.error('Failed to load metrics:', err));
   }, []);
 
+  // robust comparator: numeric when possible, otherwise string (case-insensitive)
+  const compareByKey = (a, b, key) => {
+    const A = a?.[key];
+    const B = b?.[key];
+
+    // Handle undefined/null safely
+    if (A == null && B == null) return 0;
+    if (A == null) return -1;
+    if (B == null) return 1;
+
+    const numA = Number(A);
+    const numB = Number(B);
+    const bothNumbers = !Number.isNaN(numA) && !Number.isNaN(numB);
+
+    if (bothNumbers) {
+      return numA - numB;
+    }
+
+    const strA = A.toString().toLowerCase();
+    const strB = B.toString().toLowerCase();
+    return strA.localeCompare(strB);
+  };
+
+
   const sortedFiltered = agencies
-    .filter(a => a.agency_name.toLowerCase().includes(filter.toLowerCase()))
+    .filter(a => {
+      const query = filter.toLowerCase();
+      const inAgency = a.agency_name.toLowerCase().includes(query);
+
+      const inTitles = a.titles?.some(t => {
+        const nameMatch = t.name.toLowerCase().includes(query);
+        const numberMatch = t.number.toString().includes(query);
+        return nameMatch || numberMatch;
+      });
+
+      return inAgency || inTitles;
+    })
     .sort((a, b) => {
-      const valA = a[sortKey];
-      const valB = b[sortKey];
-      if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
-      if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
-      return 0;
+      const dir = sortOrder === 'asc' ? 1 : -1;
+      return compareByKey(a, b, sortKey) * dir;
     });
 
-  const toggleSort = (key) => {
-    if (sortKey === key) setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    else {
-      setSortKey(key);
-      setSortOrder('asc');
-    }
-  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -48,21 +73,21 @@ export default function Agencies() {
       <h1 className="text-3xl font-bold mb-6 text-center">Agency Metrics</h1>
       <div className="mb-6 text-center">
 
-      <Link
+        <Link
           href="/titles"
           className="mb-6 inline-block bg-gray-800 text-white text-center px-4 py-2 rounded-lg shadow hover:bg-gray-500 transition"
         >
           View All Titles
         </Link>
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Filter agencies..."
-          value={filter}
-          onChange={e => setFilter(e.target.value)}
-          className="px-3 py-2 border rounded w-full max-w-sm"
-        />
-      </div>
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Filter agencies..."
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+            className="px-3 py-2 border rounded w-full max-w-sm"
+          />
+        </div>
       </div>
 
       {agencies.length === 0 ? (
