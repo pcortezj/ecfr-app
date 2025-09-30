@@ -45,7 +45,6 @@ export default function Agencies() {
     return strA.localeCompare(strB);
   };
 
-
   const sortedFiltered = agencies
     .filter(a => {
       const query = filter.toLowerCase();
@@ -64,7 +63,6 @@ export default function Agencies() {
       return compareByKey(a, b, sortKey) * dir;
     });
 
-
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <h1 className="text-3xl font-bold mb-6 text-center text-white">
@@ -82,7 +80,7 @@ export default function Agencies() {
         <div className="mb-4">
           <input
             type="text"
-            placeholder="Filter agencies..."
+            placeholder="Filter by agency or title..."
             value={filter}
             onChange={e => setFilter(e.target.value)}
             className="px-3 py-2 border rounded w-full max-w-sm"
