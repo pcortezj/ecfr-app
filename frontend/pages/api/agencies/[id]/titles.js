@@ -1,29 +1,46 @@
-import Database from 'better-sqlite3';
-import path from 'path';
+// pages/api/agencies/[id]/titles.ts
+import { createClient } from '@supabase/supabase-js';
 
-export default function handler(req, res) {
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+export default async function handler(req, res) {
   const { id } = req.query;
   if (!id) return res.status(400).json({ error: 'Missing agency ID' });
 
   try {
-    const dbPath = path.resolve('../backend/ecfr.db');
-    const db = new Database(dbPath, { readonly: true });
+    // Step 1: Get titles for the agency via the join table
+    const { data: titles, error } = await supabase
+      .from('titles')
+      .select(`
+        id,
+        number,
+        name,
+        latest_amended_on,
+        latest_issue_date,
+        up_to_date_as_of,
+        reserved,
+        title_agency!inner(agency_id)
+      `)
+      .eq('title_agency.agency_id', id)
+      .order('number', { ascending: true });
 
-    // Query via join table
-    const stmt = db.prepare(`
-      SELECT t.id, t.number, t.name, 
-             t.latest_amended_on, t.latest_issue_date, 
-             t.up_to_date_as_of, t.reserved
-      FROM titles t
-      JOIN title_agency ta ON t.id = ta.title_id
-      WHERE ta.agency_id = ?
-      ORDER BY t.number
-    `);
+    if (error) throw error;
 
-    const titles = stmt.all(id);
+    // Step 2: Map titles to remove the join info, keep original fields
+    const result = titles.map(t => ({
+      id: t.id,
+      number: t.number,
+      name: t.name,
+      latest_amended_on: t.latest_amended_on,
+      latest_issue_date: t.latest_issue_date,
+      up_to_date_as_of: t.up_to_date_as_of,
+      reserved: t.reserved,
+    }));
 
-    db.close();
-    res.status(200).json(titles);
+    res.status(200).json(result);
   } catch (err) {
     console.error('Error fetching titles for agency', id, err);
     res.status(500).json({ error: 'Failed to fetch titles' });

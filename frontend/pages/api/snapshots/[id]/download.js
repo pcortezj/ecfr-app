@@ -1,31 +1,44 @@
-import Database from 'better-sqlite3';
-import path from 'path';
+// pages/api/snapshots/[id]/download.ts
+import { createClient } from '@supabase/supabase-js';
 
-export default function handler(req, res) {
-    const { id } = req.query;
-    const dbPath = path.resolve('../backend/ecfr.db'); // adjust path
-    const db = new Database(dbPath, { readonly: true });
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
-    const title = db.prepare('SELECT * FROM titles WHERE number = ?').get(id);
-    if (!title) {
-        db.close();
-        return res.status(404).json({ error: 'Title not found' });
+export default async function handler(req, res) {
+  const { id } = req.query;
+
+  try {
+    // Step 1: Find the title by number
+    const { data: title, error: titleError } = await supabase
+      .from('titles')
+      .select('*')
+      .eq('number', id)
+      .single();
+
+    if (titleError || !title) {
+      return res.status(404).json({ error: 'Title not found' });
     }
 
-    const row = db.prepare(`
-    SELECT raw_text
-    FROM snapshots
-    WHERE title_id = ?
-  `).get(title.id);
+    // Step 2: Get the first snapshot for this title
+    const { data: snapshot, error: snapshotError } = await supabase
+      .from('snapshots')
+      .select('raw_text')
+      .eq('title_id', title.id)
+      .limit(1)
+      .single();
 
-    db.close();
-
-    if (!row) {
-        res.status(404).json({ error: 'Snapshot not found' });
-        return;
+    if (snapshotError || !snapshot) {
+      return res.status(404).json({ error: 'Snapshot not found' });
     }
 
+    // Step 3: Return as a downloadable text file
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="title-${id}.txt"`);
-    res.status(200).send(row.raw_text);
+    res.status(200).send(snapshot.raw_text);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to download snapshot' });
+  }
 }
