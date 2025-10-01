@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = 'https://ecfr-app.vercel.app/api';
 
 export const getAgencies = async () => {
   const { data } = await axios.get(`${API_BASE}/agencies`);
