@@ -1,4 +1,4 @@
-LIVE DEMO: [https://ecfr-app.vercel.app/]
+LIVE DEMO: https://ecfr-app.vercel.app/
 ## eCFR Explorer Overview
 
 The **Code of Federal Regulations (CFR) Explorer** is a web application that allows users to explore the U.S. federal regulations in a structured, interactive way. It aggregates data from the ECFR API and provides insights into the content of federal titles and the agencies responsible for them.  
